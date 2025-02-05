@@ -161,13 +161,13 @@ export default function Game() {
                   onClick={() => addCard(true)}
                   className="bg-black text-white border border-white hover:bg-gray-900"
                 >
-                  Add Question
+                  Add Black Card
                 </Button>
                 <Button
                   onClick={() => addCard(false)}
                   className="bg-white text-black hover:bg-gray-100"
                 >
-                  Add Answer
+                  Add White Card
                 </Button>
               </div>
             </div>
