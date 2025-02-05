@@ -4,9 +4,10 @@ interface CardProps {
   content: string
   isBlack?: boolean
   onClick?: () => void
+  isDraggable?: boolean
 }
 
-export function Card({ content, isBlack, onClick }: CardProps) {
+export function Card({ content, isBlack, onClick, isDraggable }: CardProps) {
   return (
     <div
       className={cn(
@@ -14,6 +15,7 @@ export function Card({ content, isBlack, onClick }: CardProps) {
         isBlack 
           ? "bg-black text-white border border-white/20" 
           : "bg-white text-black border-2 border-black",
+        isDraggable && "cursor-grab active:cursor-grabbing"
       )}
       onClick={onClick}
     >

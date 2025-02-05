@@ -12,7 +12,7 @@ export function PlayerHand({ cards, onPlayCard, isActive }: PlayerHandProps) {
       <div className="flex gap-4 overflow-x-auto pb-4 justify-center">
         {cards.map((card, index) => (
           <div key={index} className="transform hover:-translate-y-4 transition-transform">
-            <Card content={card} onClick={() => isActive && onPlayCard(card)} isDraggable={isActive} />
+            <Card content={card} onClick={() => isActive && onPlayCard(card)} />
           </div>
         ))}
       </div>
