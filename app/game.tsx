@@ -104,7 +104,7 @@ export default function Game() {
     <div className="min-h-screen relative text-white flex flex-col overflow-hidden">
       {/* Video Background */}
       <div className="fixed inset-0 w-full h-full z-0">
-        <div className="absolute inset-0 bg-black/70 z-10" /> {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/70 z-10" />
         <video
           autoPlay
           loop
@@ -120,9 +120,7 @@ export default function Game() {
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
         <div className="fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-sm z-10">
-          {/* Banner - Now as a subtle top strip */}
-          <div className="h-1.5 w-full " />
-          
+          <div className="h-1.5 w-full" />
           <div className="max-w-7xl mx-auto">
             {/* Navigation Bar */}
             <div className="px-4 py-3 flex justify-between items-center">
@@ -248,11 +246,10 @@ export default function Game() {
               <div className="flex items-center gap-3 text-xs text-white">
                 This is a parody game inspired by Cards Against Humanity and is not affiliated with, endorsed, or sponsored by Cards Against Humanity.
               </div>
-
-              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
   )
 } 
