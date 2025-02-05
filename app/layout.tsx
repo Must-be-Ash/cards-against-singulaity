@@ -1,8 +1,43 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import Image from "next/image";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
+
+function MobileWarning() {
+  return (
+    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center text-white p-6 md:hidden">
+      <div className="max-w-md text-center space-y-4">
+        <div className="w-20 h-20 mx-auto relative">
+          <Image
+            src="/nvg.svg"
+            alt="Navigate Logo"
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
+        <h2 className="text-2xl font-bold">Desktop Experience Required</h2>
+        <p className="text-gray-400">
+          Cards Against Singularity is designed for desktop use. Please switch to a computer for the best experience.
+        </p>
+        <p className="text-sm text-orange-500">
+          Built by{" "}
+          <a 
+            href="https://nvg8.io" 
+            className="underline hover:text-orange-400"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Navigate
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -84,7 +119,9 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#000000" />
       </head>
       <body className="antialiased">
+        <MobileWarning />
         {children}
+        <Analytics />
       </body>
     </html>
   );
