@@ -6,6 +6,7 @@ import { Card } from "@/components/card"
 import { Button } from "@/components/ui/button"
 import { motion, PanInfo } from "framer-motion"
 import Image from "next/image"
+import { RotateCcw } from "lucide-react"
 
 type CardPosition = {
   x: number
@@ -148,23 +149,25 @@ export default function Game() {
               <div className="flex items-center gap-4">
                 <Button
                   onClick={clearCards}
-                  variant="outline"
-                  className="bg-transparent text-white border-white/20 hover:bg-white/10 hover:border-white/40"
+                  variant="ghost"
+                  size="icon"
+                  className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 hover:text-orange-500 transition-colors"
+                  title="Reset Cards"
                 >
-                  Reset Cards
+                  <RotateCcw className="h-4 w-4" />
                 </Button>
                 <div className="w-px h-6 bg-white/10" />
                 <Button
                   onClick={() => addCard(true)}
                   className="bg-black text-white border border-white hover:bg-gray-900"
                 >
-                  Add Black Card
+                  Add Question
                 </Button>
                 <Button
                   onClick={() => addCard(false)}
                   className="bg-white text-black hover:bg-gray-100"
                 >
-                  Add White Card
+                  Add Answer
                 </Button>
               </div>
             </div>

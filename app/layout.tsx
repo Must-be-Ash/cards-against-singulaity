@@ -14,7 +14,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "Cards Against Singularity | Navigate",
-  description: "A humorous card game about AI and blockchain, powered by Navigate - The Data Marketplace for AI Agents on Base.",
+  description: "A parody game inspired by Cards Against Humanity, powered by Navigate - The Data Marketplace for AI Agents on Base.",
   keywords: ["AI", "blockchain", "card game", "Navigate", "Base", "web3", "data marketplace"],
   authors: [{ name: "Navigate" }],
   creator: "Navigate",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://nvg8.io",
     title: "Cards Against Singularity | Navigate",
-    description: "A humorous card game about AI and blockchain, powered by Navigate - The Data Marketplace for AI Agents on Base.",
+    description: "A parody game inspired by Cards Against Humanity, powered by Navigate - The Data Marketplace for AI Agents on Base.",
     siteName: "Navigate",
     images: [
       {
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Cards Against Singularity | Navigate",
-    description: "A humorous card game about AI and blockchain, powered by Navigate - The Data Marketplace for AI Agents on Base.",
+    description: "A parody game inspired by Cards Against Humanity, powered by Navigate - The Data Marketplace for AI Agents on Base.",
     creator: "@navigate_ai",
     images: ["/banner.png"],
   },

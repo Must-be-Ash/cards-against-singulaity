@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 interface CardProps {
   content: string
@@ -22,7 +23,15 @@ export function Card({ content, isBlack, onClick, isDraggable }: CardProps) {
       <div className="h-full flex items-start">
         <p>{content}</p>
       </div>
-      <div className="absolute bottom-4 left-4">
+      <div className="absolute bottom-4 left-4 flex items-center gap-2">
+        <div className="w-4 h-4 relative">
+          <Image
+            src="/nvg.svg"
+            alt="Navigate Logo"
+            fill
+            className="object-contain"
+          />
+        </div>
         <span className="text-sm font-normal">Cards Against Singularity™</span>
       </div>
     </div>
