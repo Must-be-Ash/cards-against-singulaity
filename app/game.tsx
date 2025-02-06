@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button"
 import { motion, PanInfo } from "framer-motion"
 import Image from "next/image"
 import { RotateCcw } from "lucide-react"
+import MintGameState from "@/components/mint-game-state"
+import { toPng } from 'html-to-image'
+import { put } from '@vercel/blob'
 
 type CardPosition = {
   x: number
@@ -31,6 +34,10 @@ export default function Game() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [draggedCard, setDraggedCard] = useState<string | null>(null)
   const dragOrigins = useRef<Record<string, { x: number; y: number }>>({})
+  const gameRef = useRef<HTMLDivElement>(null)
+  const [showMintModal, setShowMintModal] = useState(false)
+  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const socket = usePartySocket({
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST!,
@@ -83,6 +90,38 @@ export default function Game() {
     delete dragOrigins.current[cardId]
   }
 
+  const processGameState = async () => {
+    if (!gameRef.current) return null
+    
+    try {
+      setIsProcessing(true)
+      // Capture the game state
+      const dataUrl = await toPng(gameRef.current)
+      
+      // Convert data URL to blob
+      const response = await fetch(dataUrl)
+      const blob = await response.blob()
+      
+      // Upload to Vercel Blob
+      const { url } = await put('game-state.png', blob, {
+        access: 'public',
+        token: process.env.NEXT_PUBLIC_VERCEL_BLOB_RW_TOKEN!
+      })
+
+      setCapturedImageUrl(url)
+    } catch (err) {
+      console.error('Failed to capture game state:', err)
+      return null
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleMint = () => {
+    setShowMintModal(true)
+    processGameState()
+  }
+
   if (!gameState) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex items-center justify-center">
@@ -101,21 +140,7 @@ export default function Game() {
   })
 
   return (
-    <div className="min-h-screen relative text-white flex flex-col overflow-hidden">
-      {/* Video Background */}
-      <div className="fixed inset-0 w-full h-full z-0">
-        <div className="absolute inset-0 bg-black/70 z-10" />
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-        >
-          <source src="/NAVIGATE_4K_S10_loop.mp4" type="video/mp4" />
-        </video>
-      </div>
-
+    <div className="min-h-screen relative text-white flex flex-col overflow-hidden bg-[#111111]">
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
@@ -156,6 +181,12 @@ export default function Game() {
                 </Button>
                 <div className="w-px h-6 bg-white/10" />
                 <Button
+                  onClick={handleMint}
+                  className="bg-black text-white border border-white/20 hover:bg-white/10"
+                >
+                  Mint NFT
+                </Button>
+                <Button
                   onClick={() => addCard(true)}
                   className="bg-black text-white border border-white hover:bg-gray-900"
                 >
@@ -174,36 +205,51 @@ export default function Game() {
 
         {/* Game Board */}
         <div className="pt-24 flex-grow relative">
-          {sortedCards.map((card) => (
-            <motion.div
-              key={card.id}
-              drag
-              dragMomentum={false}
-              dragElastic={0}
-              onDragStart={() => handleDragStart(card.id)}
-              onDragEnd={(_, info) => handleDragEnd(card.id, info)}
-              initial={{ x: card.position.x, y: card.position.y, rotate: card.position.rotation }}
-              animate={{
-                x: card.position.x,
-                y: card.position.y,
-                rotate: card.position.rotation,
-                scale: draggedCard === card.id ? 1.05 : 1,
-                zIndex: card.isBlack ? 1 : 2
-              }}
-              transition={{
-                type: "tween",
-                duration: 0.1
-              }}
-              className="fixed top-0 left-0 cursor-grab active:cursor-grabbing"
-              style={{ touchAction: "none" }}
-            >
-              <Card
-                content={card.content}
-                isBlack={card.isBlack}
-              />
-            </motion.div>
-          ))}
+          <div 
+            ref={gameRef}
+            className="relative min-h-[calc(100vh-12rem)] mx-auto"
+          >
+            {sortedCards.map((card) => (
+              <motion.div
+                key={card.id}
+                drag
+                dragMomentum={false}
+                dragElastic={0}
+                onDragStart={() => handleDragStart(card.id)}
+                onDragEnd={(_, info) => handleDragEnd(card.id, info)}
+                initial={{ x: card.position.x, y: card.position.y, rotate: card.position.rotation }}
+                animate={{
+                  x: card.position.x,
+                  y: card.position.y,
+                  rotate: card.position.rotation,
+                  scale: draggedCard === card.id ? 1.05 : 1,
+                  zIndex: card.isBlack ? 1 : 2
+                }}
+                transition={{
+                  type: "tween",
+                  duration: 0.1
+                }}
+                className="absolute cursor-grab active:cursor-grabbing"
+                style={{ touchAction: "none" }}
+              >
+                <Card
+                  content={card.content}
+                  isBlack={card.isBlack}
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
+
+        <MintGameState
+          isOpen={showMintModal}
+          onClose={() => {
+            setShowMintModal(false)
+            setCapturedImageUrl(null)
+          }}
+          imageUrl={capturedImageUrl || ''}
+          isProcessing={isProcessing}
+        />
 
         {/* Footer */}
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/90 to-transparent backdrop-blur-md">
