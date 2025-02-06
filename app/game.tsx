@@ -141,6 +141,19 @@ export default function Game() {
 
   return (
     <div className="min-h-screen relative text-white flex flex-col overflow-hidden bg-[#111111]">
+      {/* Video Background */}
+      <div className="fixed inset-0 w-full h-full">
+        <div className="absolute inset-0 bg-black/60 z-[1]" /> {/* Dark overlay */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source src="/NAVIGATE_4K_S10_loop.mp4" type="video/mp4" />
+        </video>
+      </div>
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
@@ -151,7 +164,7 @@ export default function Game() {
             <div className="px-4 py-3 flex justify-between items-center">
               <div className="flex items-center gap-6">
                 <a 
-                  href="https://nvg8.io/" 
+                  href="https://x.com/navigate_ai" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 group"
@@ -279,7 +292,7 @@ export default function Game() {
                 </div>
                 <span className="text-orange-500/50">•</span>
                 <a 
-                  href="https://nvg8.io" 
+                  href="https://x.com/navigate_ai" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-sm text-gray-400 hover:text-white transition-colors"

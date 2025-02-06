@@ -26,7 +26,7 @@ function MobileWarning() {
         <p className="text-sm text-orange-500">
           Built by{" "}
           <a 
-            href="https://nvg8.io" 
+            href="https://cards-against-singulaity.vercel.app/" 
             className="underline hover:text-orange-400"
             target="_blank"
             rel="noopener noreferrer"
@@ -54,11 +54,11 @@ export const metadata: Metadata = {
   authors: [{ name: "Navigate" }],
   creator: "Navigate",
   publisher: "Navigate",
-  metadataBase: new URL("https://nvg8.io"),
+  metadataBase: new URL("https://cards-against-singulaity.vercel.app/"),
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://nvg8.io",
+    url: "https://cards-against-singulaity.vercel.app/",
     title: "Cards Against Singularity | Navigate",
     description: "A parody game inspired by Cards Against Humanity, powered by Navigate - The Data Marketplace for AI Agents on Base.",
     siteName: "Navigate",
