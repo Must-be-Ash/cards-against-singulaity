@@ -6,6 +6,14 @@ import { CdpAgentkit } from "@/lib/cdp/cdp_agentkit"
 import { Coinbase } from "@coinbase/coinbase-sdk"
 import fs from 'fs'
 
+// Define an interface for the expected error type
+interface DeployError {
+  name?: string;
+  message?: string;
+  code?: string | number;
+  httpCode?: number;
+}
+
 // Define the deploy NFT action schema
 const DeployNftInput = z.object({
   name: z.string().describe("The name of the NFT collection"),
@@ -32,14 +40,22 @@ const deployNftAction: CdpAction<typeof DeployNftInput> = {
       return `Deployed NFT Collection ${args.name} to address ${result.getContractAddress()} on network ${wallet.getNetworkId()}.\nTransaction hash for the deployment: ${transaction.getTransactionHash()}\nTransaction link for the deployment: ${transaction.getTransactionLink()}`;
     } catch (error) {
       console.error('Deploy invocation error:', error);
-      console.error('Error details:', {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        httpCode: error.httpCode,
-        apiCode: error.apiCode,
-        apiMessage: error.apiMessage
-      });
+      
+      // Type guard to safely access error properties
+      const deployError: DeployError = {};
+      if (error && typeof error === 'object') {
+        if ('name' in error) deployError.name = String(error.name);
+        if ('message' in error) deployError.message = String(error.message);
+        if ('code' in error) {
+          const code = error.code;
+          if (typeof code === 'string' || typeof code === 'number') {
+            deployError.code = code;
+          }
+        }
+        if ('httpCode' in error) deployError.httpCode = Number(error.httpCode);
+      }
+
+      console.error('Error details:', deployError);
       throw error; // Re-throw to be caught by the outer try-catch
     }
   }
