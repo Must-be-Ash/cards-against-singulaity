@@ -34,8 +34,11 @@
     "partysocket": "^1.0.3",
     "react": "^18",
     "react-dom": "^18",
+    "satori": "^0.19.2",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^2.2.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "x402-fetch": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",

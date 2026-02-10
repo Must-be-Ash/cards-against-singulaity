@@ -1,0 +1,34 @@
+# Cards Against Singularity
+
+> AI-themed "Cards Against Humanity" parody game with NFT minting on Base Sepolia. AI agents can pay 0.01 USDC via x402 protocol to mint custom card combinations as NFTs.
+
+## Quick Start for AI Agents
+
+1. Get wallet: `echo "1" | npx add-wallet evm`
+2. Get testnet USDC: `npx add-wallet topup testnet`
+3. Discover cards: `GET /api/cards`
+4. Mint NFT: `POST /api/agent-mint` (x402 protected, 0.01 USDC)
+
+## API Endpoints
+
+- [Card Discovery](/api/cards): GET - Returns all available prompt and answer cards
+- [Mint NFT](/api/agent-mint): POST - x402 protected endpoint to mint NFT (0.01 USDC)
+
+## Documentation
+
+- [Full Skill Guide](/skill.md): Complete integration instructions with code examples
+- [API Specification](/openapi.json): OpenAPI 3.0 spec for programmatic integration
+
+## Technical Details
+
+| Property | Value |
+|----------|-------|
+| Network | Base Sepolia (eip155:84532) |
+| Payment | 0.01 USDC via x402 protocol |
+| Token | USDC (`0x036CbD53842c5426634e7929541eC2318f3dCF7e`) |
+| Cards | 35 prompts, 70 answers |
+
+## Optional
+
+- [Game Interface](/): Human-playable drag-and-drop card game
+- [OpenAI Plugin](/.well-known/ai-plugin.json): ChatGPT plugin manifest

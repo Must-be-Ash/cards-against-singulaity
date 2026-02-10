@@ -33,6 +33,12 @@ npm run lint     # Run ESLint
 - `app/api/deploy/route.ts` - Deploys new NFT collection contract
 - Uses singleton wallet pattern with persistent wallet data from `wallet_data.txt`
 
+### AI Agent API (x402 Protocol)
+- `app/api/cards/route.ts` - GET endpoint returns available cards (prompts + answers)
+- `app/api/agent-mint/route.ts` - POST endpoint for AI agents to mint NFTs
+- `middleware.ts` - x402 payment proxy (configured for $0 payments on Base Sepolia)
+- `lib/cards.ts` - Shared card pool data (PROMPT_CARDS, ANSWER_CARDS)
+
 ### Components
 - `components/card.tsx` - Black/white card rendering
 - `components/mint-game-state.tsx` - NFT minting modal with wallet input and status tracking
@@ -41,8 +47,37 @@ npm run lint     # Run ESLint
 ## Environment Variables
 
 Required for NFT functionality:
-- `CDP_API_KEY_NAME` - Coinbase CDP API key name (server-side)
-- `CDP_API_KEY_PRIVATE_KEY` - Coinbase CDP API private key (server-side)
+- `CDP_API_KEY_ID` - Coinbase CDP API key ID (server-side)
+- `CDP_API_KEY_SECRET` - Coinbase CDP API secret (server-side)
+- `CDP_WALLET_SECRET` - Coinbase CDP wallet secret (server-side)
 - `NEXT_PUBLIC_NFT_CONTRACT` - Deployed NFT contract address (public)
 - `VERCEL_BLOB_RW_TOKEN` - Vercel Blob storage token (server-side)
 - `NEXT_PUBLIC_PARTYKIT_HOST` - PartyKit server host (public)
+
+Optional for x402:
+- `SERVER_WALLET_ADDRESS` - Wallet to receive x402 payments (optional, defaults to zero address for free minting)
+
+## AI Agent API Usage
+
+### 1. Discover Available Cards
+```bash
+GET /api/cards
+# Returns: { prompts: [...], answers: [...], totalPrompts, totalAnswers }
+```
+
+### 2. Mint NFT (x402 protected, $0 on testnet)
+```bash
+POST /api/agent-mint
+Content-Type: application/json
+
+{
+  "walletAddress": "0xAgentWallet",
+  "promptIndices": [0, 5],           // Select prompts by index
+  "answerIndices": [12, 33],         // Select answers by index
+  "customCards": [                   // Optional custom cards
+    { "content": "My custom card", "isBlack": true }
+  ]
+}
+
+# Returns: { success, transactionHash, transactionLink, imageUrl, cards }
+```
