@@ -116,7 +116,7 @@ const DEFAULT_CARDS = {
   },
   "default-white": {
     id: "default-white",
-    content: "A wallet and good data",
+    content: "A wallet",
     position: { x: 80, y: 320, rotation: 3 },
     isBlack: false
   }
