@@ -6,7 +6,7 @@ import { Card } from "@/components/card"
 import { Button } from "@/components/ui/button"
 import { motion, PanInfo } from "framer-motion"
 import Image from "next/image"
-import { RotateCcw, Plus, Sparkles } from "lucide-react"
+import { RotateCcw, Plus, Sparkles, Trash2 } from "lucide-react"
 import MintGameState from "@/components/mint-game-state"
 import { toPng } from 'html-to-image'
 
@@ -32,8 +32,10 @@ type GameState = {
 export default function Game() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [draggedCard, setDraggedCard] = useState<string | null>(null)
+  const [isOverTrash, setIsOverTrash] = useState(false)
   const dragOrigins = useRef<Record<string, { x: number; y: number }>>({})
   const gameRef = useRef<HTMLDivElement>(null)
+  const trashRef = useRef<HTMLDivElement>(null)
   const [showMintModal, setShowMintModal] = useState(false)
   const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -114,9 +116,13 @@ export default function Game() {
     socket.send(JSON.stringify({ type: "moveCard", cardId, position }))
   }
 
+  const deleteCard = (cardId: string) => {
+    socket.send(JSON.stringify({ type: "deleteCard", cardId }))
+  }
+
   const handleDragStart = (cardId: string) => {
     if (!gameState?.playedCards[cardId]) return
-    
+
     // Store the original position when starting to drag
     dragOrigins.current[cardId] = {
       x: gameState.playedCards[cardId].position.x,
@@ -125,8 +131,34 @@ export default function Game() {
     setDraggedCard(cardId)
   }
 
+  const handleDrag = (info: PanInfo) => {
+    // Check if card is over trash zone
+    if (trashRef.current) {
+      const trashRect = trashRef.current.getBoundingClientRect()
+      const cardCenterX = info.point.x
+      const cardCenterY = info.point.y
+
+      const isOver =
+        cardCenterX >= trashRect.left &&
+        cardCenterX <= trashRect.right &&
+        cardCenterY >= trashRect.top &&
+        cardCenterY <= trashRect.bottom
+
+      setIsOverTrash(isOver)
+    }
+  }
+
   const handleDragEnd = (cardId: string, info: PanInfo) => {
     if (!gameState?.playedCards[cardId]) return
+
+    // Check if dropped on trash
+    if (isOverTrash) {
+      deleteCard(cardId)
+      setIsOverTrash(false)
+      setDraggedCard(null)
+      delete dragOrigins.current[cardId]
+      return
+    }
 
     const originalPosition = dragOrigins.current[cardId]
     if (!originalPosition) return
@@ -136,9 +168,10 @@ export default function Game() {
       y: originalPosition.y + info.offset.y,
       rotation: (Math.random() - 0.5) * 10
     }
-    
+
     updateCardPosition(cardId, position)
     setDraggedCard(null)
+    setIsOverTrash(false)
     delete dragOrigins.current[cardId]
   }
 
@@ -184,10 +217,13 @@ export default function Game() {
 
   if (!gameState) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#0000FF] text-white flex items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Loading game board...</h2>
-          <p className="text-sm sm:text-base text-gray-400">Please wait while we set up the cards</p>
+          <div className="mb-6 flex justify-center">
+            <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">Loading game board...</h2>
+          <p className="text-sm sm:text-base text-white/60">Setting up the cards</p>
         </div>
       </div>
     )
@@ -299,13 +335,15 @@ export default function Game() {
                 dragMomentum={false}
                 dragElastic={0}
                 onDragStart={() => handleDragStart(card.id)}
+                onDrag={(_, info) => handleDrag(info)}
                 onDragEnd={(_, info) => handleDragEnd(card.id, info)}
                 initial={{ x: card.position.x, y: card.position.y, rotate: card.position.rotation }}
                 animate={{
                   x: card.position.x,
                   y: card.position.y,
                   rotate: card.position.rotation,
-                  scale: draggedCard === card.id ? 1.05 : 1,
+                  scale: draggedCard === card.id ? (isOverTrash ? 0.9 : 1.05) : 1,
+                  opacity: draggedCard === card.id && isOverTrash ? 0.5 : 1,
                   zIndex: card.isBlack ? 1 : 2
                 }}
                 transition={{
@@ -323,6 +361,28 @@ export default function Game() {
             ))}
           </div>
         </div>
+
+        {/* Trash zone - appears when dragging */}
+        <motion.div
+          ref={trashRef}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{
+            opacity: draggedCard ? 1 : 0,
+            scale: draggedCard ? 1 : 0.8,
+            pointerEvents: draggedCard ? "auto" : "none"
+          }}
+          transition={{ duration: 0.2 }}
+          className={`fixed bottom-44 sm:bottom-32 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed transition-colors ${
+            isOverTrash
+              ? "bg-red-500/30 border-red-500"
+              : "bg-black/50 border-white/30"
+          }`}
+        >
+          <Trash2 className={`w-8 h-8 transition-colors ${isOverTrash ? "text-red-500" : "text-white/70"}`} />
+          <span className={`text-xs font-medium transition-colors ${isOverTrash ? "text-red-500" : "text-white/70"}`}>
+            Drop to delete
+          </span>
+        </motion.div>
 
         <MintGameState
           isOpen={showMintModal}

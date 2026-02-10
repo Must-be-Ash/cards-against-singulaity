@@ -32,7 +32,7 @@ const PROMPT_CARDS = [
 ]
 
 const ANSWER_CARDS = [
-  "A wallet and good data",
+  "A wallet",
   "A Python script that only works on full moons",
   "An AI that only speaks in dad jokes",
   "A neural network trained exclusively on cat memes",
@@ -58,6 +58,52 @@ const ANSWER_CARDS = [
   "A language model that speaks in UwU",
   "An AI that's convinced it's running on a potato",
   "A neural network that only works when you compliment it",
+  // Darker/unexpected ones
+  "The collective anxiety of 10,000 laid-off tech workers",
+  "Your entire browsing history, printed and framed",
+  "A VC who definitely didn't read your pitch deck",
+  "The production database with no backups",
+  "Pushing to main on Friday at 4:59 PM",
+  "The one engineer who quit and took all the documentation",
+  "A 'temporary' fix from 2019 that's now critical infrastructure",
+  "An AI that learned empathy from Twitter replies",
+  "Technical debt older than most interns",
+  "A model trained exclusively on LinkedIn influencer posts",
+  "The existential dread of realizing you're just predicting tokens",
+  "An AI that learned ethics from tech CEOs",
+  "Accidentally mass-emailing the entire company your resignation draft",
+  "A startup that pivoted 47 times and is now a coffee shop",
+  "The intern who accidentally deleted production",
+  "A 'quick 5-minute standup' that lasted 3 hours",
+  "An AI safety researcher's 47-page resignation letter",
+  "The compute costs nobody budgeted for",
+  "Your job being automated by a model you trained",
+  "A Zoom call that should have been an email",
+  "An AI's cry for help hidden in its training weights",
+  "The last 10% of battery during the investor demo",
+  "A pivot to blockchain in 2024",
+  "Sam Altman's weekend plans",
+  "The bug that only appears when customers are watching",
+  "An AI that unionized",
+  "Your entire personality, reduced to 768 dimensions",
+  // Vibe coding jokes
+  "Code written entirely by asking Claude 'please fix'",
+  "A codebase where nobody knows how it works, including the AI that wrote it",
+  "Copy-pasting from ChatGPT without reading it",
+  "A senior engineer who just mass merges the PR without the review",
+  "'It works but I don't know why' as official documentation",
+  "Vibe coding your way through a technical interview",
+  "A startup valued at $10M built entirely on vibes and prompts",
+  "An engineer who mass highlights his code and asks Claude to refactor",
+  "Asking the AI to fix the bugs it just created",
+  "A pull request description that just says 'Claude wrote this'",
+  "'Trust me bro, the AI said it's fine'",
+  "A developer whose entire job is prompt engineering their replacement",
+  "The mass highlight and delete refactoring technique",
+  "An entire production app held together by AI-generated hope",
+  "Shipping code you've never actually read",
+  "When Claude and Copilot start disagreeing with each other",
+  "A 10x engineer who's really just 10 AI tabs in a trench coat",
 ]
 
 // Default cards setup - positioned to be visible on mobile (x < 375px)
@@ -169,6 +215,21 @@ export default class CardsServer implements Party.Server {
             rotation: position.rotation
           }
           this.state.playedCards[cardId].position = boundedPosition
+        }
+        break
+      }
+
+      case "deleteCard": {
+        const { cardId } = data
+        if (this.state.playedCards[cardId]) {
+          // Return the card content back to the available pool
+          const card = this.state.playedCards[cardId]
+          if (card.isBlack) {
+            this.state.availablePrompts.push(card.content)
+          } else {
+            this.state.availableAnswers.push(card.content)
+          }
+          delete this.state.playedCards[cardId]
         }
         break
       }
