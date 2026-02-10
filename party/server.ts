@@ -60,18 +60,18 @@ const ANSWER_CARDS = [
   "A neural network that only works when you compliment it",
 ]
 
-// Default cards setup
+// Default cards setup - positioned to be visible on mobile (x < 375px)
 const DEFAULT_CARDS = {
   "default-black": {
     id: "default-black",
     content: "Every AI Agent Deserves ___",
-    position: { x: 400, y: 200, rotation: 0 },
+    position: { x: 100, y: 120, rotation: -2 },
     isBlack: true
   },
   "default-white": {
     id: "default-white",
     content: "A wallet and good data",
-    position: { x: 400, y: 400, rotation: 0 },
+    position: { x: 80, y: 320, rotation: 3 },
     isBlack: false
   }
 }
@@ -118,23 +118,40 @@ export default class CardsServer implements Party.Server {
       }
 
       case "addCard": {
-        const { isBlack } = data
+        const { isBlack, viewport } = data
         const availableCards = isBlack ? this.state.availablePrompts : this.state.availableAnswers
         if (availableCards.length > 0) {
           const randomIndex = Math.floor(Math.random() * availableCards.length)
           const content = availableCards.splice(randomIndex, 1)[0]
           const cardId = `card-${Date.now()}-${Math.random()}`
-          
-          // Use fixed values for initial positioning
-          const centerX = 400
-          const centerY = 300
-          
+
+          // Card dimensions (mobile: 176x256, desktop: 256x384)
+          const cardWidth = viewport?.width && viewport.width < 768 ? 176 : 256
+          const cardHeight = viewport?.width && viewport.width < 768 ? 256 : 384
+
+          // Calculate center position based on viewport, with padding for card size
+          const viewportWidth = viewport?.width || 800
+          const viewportHeight = viewport?.height || 600
+          const headerHeight = viewport?.width && viewport.width < 768 ? 64 : 96
+          const footerHeight = viewport?.width && viewport.width < 768 ? 128 : 96
+
+          // Available area for cards (accounting for header, footer, and card size)
+          const availableWidth = viewportWidth - cardWidth - 32 // 32px padding
+          const availableHeight = viewportHeight - headerHeight - footerHeight - cardHeight
+
+          // Center of available area
+          const centerX = 16 + availableWidth / 2
+          const centerY = headerHeight + availableHeight / 2
+
+          // Random offset (smaller on mobile)
+          const offsetRange = viewport?.width && viewport.width < 768 ? 60 : 100
+
           this.state.playedCards[cardId] = {
             id: cardId,
             content,
             position: {
-              x: centerX + (Math.random() - 0.5) * 200,
-              y: centerY + (Math.random() - 0.5) * 200,
+              x: centerX + (Math.random() - 0.5) * offsetRange,
+              y: centerY + (Math.random() - 0.5) * offsetRange,
               rotation: (Math.random() - 0.5) * 15
             },
             isBlack

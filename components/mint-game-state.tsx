@@ -94,12 +94,12 @@ export default function MintGameState({ isOpen, onClose, imageUrl, isProcessing 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md border border-white/10 bg-[#111111] text-white shadow-2xl">
-        <DialogHeader className="border-b border-white/10 pb-4">
-          <DialogTitle className="text-xl font-bold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md border border-white/10 bg-[#111111] text-white shadow-2xl mx-auto">
+        <DialogHeader className="border-b border-white/10 pb-3 sm:pb-4">
+          <DialogTitle className="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
             Mint this set
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-sm text-gray-400">
             Enter your wallet address to mint this game state as an NFT.
           </DialogDescription>
         </DialogHeader>
@@ -178,7 +178,7 @@ export default function MintGameState({ isOpen, onClose, imageUrl, isProcessing 
                       {imageUrl}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 pt-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 pt-2">
                     <a
                       href={mintStatus.transactionLink}
                       target="_blank"

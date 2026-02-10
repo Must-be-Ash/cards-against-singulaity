@@ -6,10 +6,9 @@ import { Card } from "@/components/card"
 import { Button } from "@/components/ui/button"
 import { motion, PanInfo } from "framer-motion"
 import Image from "next/image"
-import { RotateCcw } from "lucide-react"
+import { RotateCcw, Plus, Sparkles } from "lucide-react"
 import MintGameState from "@/components/mint-game-state"
 import { toPng } from 'html-to-image'
-import { put } from '@vercel/blob'
 
 type CardPosition = {
   x: number
@@ -39,19 +38,72 @@ export default function Game() {
   const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
+  // Adjust card positions to fit within viewport (for mobile)
+  const adjustPositionsForViewport = (state: GameState): GameState => {
+    const isMobile = window.innerWidth < 768
+    if (!isMobile) return state
+
+    const viewportWidth = window.innerWidth
+    const cardWidth = 144 // mobile card width (w-36)
+    const cardHeight = 208 // mobile card height (h-52)
+    const centerX = (viewportWidth - cardWidth) / 2
+    const startY = 80 // Below header
+
+    const adjustedCards: Record<string, PlayedCard> = {}
+    const cardEntries = Object.entries(state.playedCards)
+
+    cardEntries.forEach(([id, card]) => {
+      // Check if this is a default card or off-screen
+      const isOffScreen = card.position.x < 0 || card.position.x > (viewportWidth - cardWidth)
+      const isDefaultCard = id === 'default-black' || id === 'default-white'
+
+      if (isOffScreen || isDefaultCard) {
+        // Position cards stacked with slight overlap, opposite tilts
+        const isBlackCard = card.isBlack
+        const yOffset = isBlackCard ? 0 : cardHeight - 40 // White card overlaps black by 40px
+        const xOffset = isBlackCard ? -15 : 15 // Slight horizontal offset
+        const rotation = isBlackCard ? -6 : 6 // Opposite tilts
+
+        adjustedCards[id] = {
+          ...card,
+          position: {
+            x: centerX + xOffset,
+            y: startY + yOffset,
+            rotation: rotation
+          }
+        }
+      } else {
+        // Keep user-positioned cards as-is (clamped to viewport)
+        adjustedCards[id] = {
+          ...card,
+          position: {
+            ...card.position,
+            x: Math.max(8, Math.min(card.position.x, viewportWidth - cardWidth - 8))
+          }
+        }
+      }
+    })
+
+    return { ...state, playedCards: adjustedCards }
+  }
+
   const socket = usePartySocket({
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST!,
     room: "game",
     onMessage(event) {
       const data = JSON.parse(event.data)
       if (data.type === "gameState") {
-        setGameState(data.state)
+        setGameState(adjustPositionsForViewport(data.state))
       }
     },
   })
 
   const addCard = (isBlack: boolean) => {
-    socket.send(JSON.stringify({ type: "addCard", isBlack }))
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    }
+    socket.send(JSON.stringify({ type: "addCard", isBlack, viewport }))
   }
 
   const clearCards = () => {
@@ -92,22 +144,30 @@ export default function Game() {
 
   const processGameState = async () => {
     if (!gameRef.current) return null
-    
+
     try {
       setIsProcessing(true)
       // Capture the game state
       const dataUrl = await toPng(gameRef.current)
-      
+
       // Convert data URL to blob
       const response = await fetch(dataUrl)
       const blob = await response.blob()
-      
-      // Upload to Vercel Blob
-      const { url } = await put('game-state.png', blob, {
-        access: 'public',
-        token: process.env.NEXT_PUBLIC_VERCEL_BLOB_RW_TOKEN!
+
+      // Upload to Vercel Blob via API route
+      const formData = new FormData()
+      formData.append('file', blob, 'game-state.png')
+
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
       })
 
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      const { url } = await uploadResponse.json()
       setCapturedImageUrl(url)
     } catch (err) {
       console.error('Failed to capture game state:', err)
@@ -124,10 +184,10 @@ export default function Game() {
 
   if (!gameState) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Loading game board...</h2>
-          <p className="text-gray-400">Please wait while we set up the cards</p>
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Loading game board...</h2>
+          <p className="text-sm sm:text-base text-gray-400">Please wait while we set up the cards</p>
         </div>
       </div>
     )
@@ -141,19 +201,8 @@ export default function Game() {
 
   return (
     <div className="min-h-screen relative text-white flex flex-col overflow-hidden bg-[#111111]">
-      {/* Video Background */}
-      <div className="fixed inset-0 w-full h-full">
-        <div className="absolute inset-0 bg-black/60 z-[1]" /> {/* Dark overlay */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-        >
-          <source src="/NAVIGATE_4K_S10_loop.mp4" type="video/mp4" />
-        </video>
-      </div>
+      {/* Background */}
+      <div className="fixed inset-0 w-full h-full bg-[#0000FF]" />
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
@@ -161,28 +210,29 @@ export default function Game() {
           <div className="h-1.5 w-full" />
           <div className="max-w-7xl mx-auto">
             {/* Navigation Bar */}
-            <div className="px-4 py-3 flex justify-between items-center">
-              <div className="flex items-center gap-6">
-                <a 
-                  href="https://x.com/navigate_ai" 
-                  target="_blank" 
+            <div className="px-3 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
+              <div className="flex items-center gap-3 sm:gap-6">
+                <a
+                  href="https://x.com/Must_be_Ash"
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 group"
+                  className="flex items-center gap-2 sm:gap-3 group"
                 >
                   <Image
-                    src="/nvg.svg"
-                    alt="Navigate Logo"
-                    width={40}
-                    height={40}
-                    className="group-hover:opacity-80 transition-opacity"
+                    src="/logo-white.svg"
+                    alt="Cards Against Singularity"
+                    width={32}
+                    height={32}
+                    className="group-hover:opacity-80 transition-opacity sm:w-10 sm:h-10"
                   />
-                  <div className="border-l border-white/10 pl-3">
-                    <p className="text-xs text-orange-500 font-medium">powered by <span className="text-white font-bold">Navigate</span></p>
-                    <p className="text-xs text-gray-400">The Data Marketplace for AI Agents <span className="text-blue-500">Built on Base</span></p>
+                  <div className="hidden sm:block border-l border-white/10 pl-3">
+                    <p className="text-xs text-white font-bold">Cards Against Singularity</p>
+                    <p className="text-xs text-gray-400">A parody card game for AI humor</p>
                   </div>
                 </a>
               </div>
-              <div className="flex items-center gap-4">
+              {/* Desktop buttons */}
+              <div className="hidden md:flex items-center gap-4">
                 <Button
                   onClick={clearCards}
                   variant="ghost"
@@ -212,15 +262,35 @@ export default function Game() {
                   Add White Card
                 </Button>
               </div>
+              {/* Mobile buttons - compact */}
+              <div className="flex md:hidden items-center gap-2">
+                <Button
+                  onClick={clearCards}
+                  variant="ghost"
+                  size="icon"
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10"
+                  title="Reset Cards"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  onClick={handleMint}
+                  size="sm"
+                  className="bg-black text-white border border-white/20 hover:bg-white/10 text-xs px-2 h-8"
+                >
+                  <Sparkles className="h-3.5 w-3.5 mr-1" />
+                  Mint
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Game Board */}
-        <div className="pt-24 flex-grow relative">
-          <div 
+        <div className="pt-16 sm:pt-24 pb-32 sm:pb-24 flex-grow relative overflow-x-hidden overflow-y-auto">
+          <div
             ref={gameRef}
-            className="relative min-h-[calc(100vh-12rem)] mx-auto"
+            className="relative min-h-[calc(100vh-12rem)] w-full"
           >
             {sortedCards.map((card) => (
               <motion.div
@@ -264,45 +334,54 @@ export default function Game() {
           isProcessing={isProcessing}
         />
 
+        {/* Mobile floating action buttons */}
+        <div className="fixed bottom-24 left-0 right-0 flex md:hidden justify-center gap-3 z-20 px-4">
+          <Button
+            onClick={() => addCard(true)}
+            className="bg-black text-white border border-white shadow-lg flex-1 max-w-[140px] active:bg-black focus:bg-black hover:bg-black/90"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Black
+          </Button>
+          <Button
+            onClick={() => addCard(false)}
+            className="bg-white text-black shadow-lg flex-1 max-w-[140px] active:bg-white focus:bg-white hover:bg-gray-100"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            White
+          </Button>
+        </div>
+
         {/* Footer */}
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/90 to-transparent backdrop-blur-md">
-          <div className="max-w-7xl mx-auto py-6">
-            <div className="flex flex-col items-center justify-center gap-4">
-              {/* Navigate Attribution */}
-              <div className="flex items-center gap-3 group">
-                <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+          <div className="max-w-7xl mx-auto py-3 sm:py-6">
+            <div className="flex flex-col items-center justify-center gap-2 sm:gap-4">
+              {/* Attribution */}
+              <div className="flex items-center gap-2 sm:gap-3 group">
+                <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
                   <Image
-                    src="/nvg.svg"
-                    alt="Navigate Logo"
-                    width={18}
-                    height={18}
-                    className="group-hover:opacity-100 opacity-70 transition-opacity"
+                    src="/logo-white.svg"
+                    alt="Cards Against Singularity"
+                    width={14}
+                    height={14}
+                    className="group-hover:opacity-100 opacity-70 transition-opacity sm:w-[18px] sm:h-[18px]"
                   />
-                  <p className="text-sm">
+                  <p className="text-xs sm:text-sm">
                     Built by{" "}
-                    <a 
-                      href="https://x.com/navigate_ai" 
-                      target="_blank" 
+                    <a
+                      href="https://x.com/Must_be_Ash"
+                      target="_blank"
                       rel="noopener noreferrer"
-                      className="text-orange-500 hover:text-orange-400 font-semibold transition-colors"
+                      className="text-blue-500 hover:text-blue-400 font-semibold transition-colors"
                     >
-                      Navigate
+                      @Must_be_Ash
                     </a>
                   </p>
                 </div>
-                <span className="text-orange-500/50">•</span>
-                <a 
-                  href="https://x.com/navigate_ai" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
-                >
-                  The Data Marketplace for AI Agents
-                </a>
               </div>
 
               {/* Disclaimer */}
-              <div className="flex items-center gap-3 text-xs text-white">
+              <div className="text-[10px] sm:text-xs text-white text-center px-4">
                 This is a parody game inspired by Cards Against Humanity and is not affiliated with, endorsed, or sponsored by Cards Against Humanity.
               </div>
             </div>
