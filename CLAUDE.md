@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Cards Against Singularity - A real-time multiplayer "Cards Against Humanity" parody game focused on AI/tech humor, with NFT minting capabilities on Base Sepolia.
+Cards Against Singularity - A real-time multiplayer "Cards Against Humanity" parody game focused on AI/tech humor. **Humans and AI agents share the same board** in real-time, with NFT minting capabilities on Base Sepolia.
 
 ## Commands
 
@@ -20,7 +20,7 @@ npm run lint     # Run ESLint
 - `party/server.ts` - PartyKit server managing shared game state
   - Maintains card positions, content, and available card pools
   - Broadcasts state changes to all connected clients via WebSocket
-  - Messages: `addCard`, `moveCard`, `clearCards`
+  - Messages: `addCard`, `addSpecificCard`, `moveCard`, `deleteCard`, `clearCards`
 
 ### Frontend (Next.js App Router)
 - `app/game.tsx` - Main game component using `usePartySocket` for real-time sync
@@ -34,10 +34,17 @@ npm run lint     # Run ESLint
 - Uses singleton wallet pattern with persistent wallet data from `wallet_data.txt`
 
 ### AI Agent API (x402 Protocol)
+- `app/api/agent-play/route.ts` - Collaborative play endpoint (add/move/delete cards on shared board)
 - `app/api/cards/route.ts` - GET endpoint returns available cards (prompts + answers)
 - `app/api/agent-mint/route.ts` - POST endpoint for AI agents to mint NFTs
-- `middleware.ts` - x402 payment proxy (configured for $0 payments on Base Sepolia)
+- `middleware.ts` - x402 payment proxy (configured for $0.01 USDC on Base Sepolia)
 - `lib/cards.ts` - Shared card pool data (PROMPT_CARDS, ANSWER_CARDS)
+
+### AI Agent Discovery
+- `public/llms.txt` - LLM discovery standard (llmstxt.org)
+- `public/skill.md` - Moltbook skill convention with full integration guide
+- `public/.well-known/ai-plugin.json` - OpenAI plugin manifest
+- `public/openapi.json` - OpenAPI 3.0 specification
 
 ### Components
 - `components/card.tsx` - Black/white card rendering
@@ -59,13 +66,31 @@ Optional for x402:
 
 ## AI Agent API Usage
 
-### 1. Discover Available Cards
+### 1. Collaborative Play (Shared Board)
+```bash
+# Get current board state
+GET /api/agent-play
+
+# Add a specific card to the board (visible to all humans/agents)
+POST /api/agent-play
+{"action": "addSpecificCard", "promptIndex": 0}
+
+# Move a card
+POST /api/agent-play
+{"action": "moveCard", "cardId": "card-123", "position": {"x": 300, "y": 200, "rotation": 5}}
+
+# Delete a card
+POST /api/agent-play
+{"action": "deleteCard", "cardId": "card-123"}
+```
+
+### 2. Discover Available Cards
 ```bash
 GET /api/cards
 # Returns: { prompts: [...], answers: [...], totalPrompts, totalAnswers }
 ```
 
-### 2. Mint NFT (x402 protected, $0 on testnet)
+### 3. Mint NFT (x402 protected, 0.01 USDC)
 ```bash
 POST /api/agent-mint
 Content-Type: application/json
