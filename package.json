@@ -38,12 +38,14 @@
     "sharp": "^0.34.5",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
+    "ws": "^8.19.0",
     "x402-fetch": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/ws": "^8.18.1",
     "assert": "^2.1.0",
     "browserify-zlib": "^0.2.0",
     "crypto-browserify": "^3.12.1",

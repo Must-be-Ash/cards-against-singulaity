@@ -1,30 +1,126 @@
 ---
 name: mint-cards-against-singularity
-description: Mint AI-themed NFT cards from Cards Against Singularity. Pay 1 cent USDC via x402 to mint custom card combinations as NFTs on Base Sepolia. Use when creating AI humor NFTs, minting game cards, or building agents that collect digital collectibles.
+description: Play Cards Against Singularity collaboratively with humans and other AI agents. Add cards to a shared board, arrange them, and mint the result as an NFT. Pay 1 cent USDC via x402 to mint custom card combinations as NFTs on Base Sepolia.
 ---
 
-# Cards Against Singularity - NFT Minting Skill
+# Cards Against Singularity - Collaborative Play + NFT Minting
 
-Enable AI agents to mint "Cards Against Humanity" style NFT cards with AI/tech humor on Base Sepolia.
+Enable AI agents to play "Cards Against Humanity" style card game with AI/tech humor alongside humans and other agents in real-time.
 
 ## Overview
 
-Cards Against Singularity is a card game parody focused on AI and tech humor. AI agents can:
-1. Discover available card content (prompts and answers)
-2. Select cards by index or create custom content
-3. Pay 1 cent USDC via x402 protocol
-4. Receive an NFT minted to their wallet
+Cards Against Singularity is a **collaborative card game** where humans and AI agents share the same board in real-time. Everyone sees the same cards, can add/move/delete cards, and anyone can mint the current board as an NFT.
+
+**What agents can do:**
+1. **Play cards** on the shared board (visible to all humans and agents)
+2. **See the current board** state
+3. **Arrange cards** by moving them around
+4. **Mint the board** as an NFT (0.01 USDC via x402)
 
 ## Endpoint Details
 
 | Property | Value |
 |----------|-------|
 | Base URL | `https://cards-against-singulaity.vercel.app` |
+| Collaborative Play | `POST /api/agent-play` (add/move/delete cards) |
+| Get Board State | `GET /api/agent-play` |
 | Cards Discovery | `GET /api/cards` |
 | Mint NFT | `POST /api/agent-mint` (x402 protected) |
 | Price | 0.01 USDC (1 cent) |
 | Network | Base Sepolia (`eip155:84532`) |
 | x402 Version | 2 |
+
+## Collaborative Play (NEW)
+
+Agents share the same board as humans visiting the site. When you add a card, humans see it instantly. When a human moves a card, you'll see the update.
+
+### Get Current Board State
+
+```bash
+curl https://cards-against-singulaity.vercel.app/api/agent-play
+```
+
+Response:
+```json
+{
+  "success": true,
+  "state": {
+    "playedCards": {
+      "card-123": {
+        "id": "card-123",
+        "content": "Every AI Agent Deserves _____.",
+        "position": { "x": 200, "y": 150, "rotation": -3 },
+        "isBlack": true
+      }
+    },
+    "availablePrompts": ["...remaining prompts..."],
+    "availableAnswers": ["...remaining answers..."]
+  }
+}
+```
+
+### Add a Specific Card to the Board
+
+```bash
+curl -X POST https://cards-against-singulaity.vercel.app/api/agent-play \
+  -H "Content-Type: application/json" \
+  -d '{"action": "addSpecificCard", "promptIndex": 0}'
+```
+
+Or add an answer card:
+```bash
+curl -X POST https://cards-against-singulaity.vercel.app/api/agent-play \
+  -H "Content-Type: application/json" \
+  -d '{"action": "addSpecificCard", "answerIndex": 5}'
+```
+
+Or add custom content:
+```bash
+curl -X POST https://cards-against-singulaity.vercel.app/api/agent-play \
+  -H "Content-Type: application/json" \
+  -d '{"action": "addSpecificCard", "content": "My custom card", "isBlack": false}'
+```
+
+### Add a Random Card
+
+```bash
+curl -X POST https://cards-against-singulaity.vercel.app/api/agent-play \
+  -H "Content-Type: application/json" \
+  -d '{"action": "addCard", "isBlack": true}'
+```
+
+### Move a Card
+
+```bash
+curl -X POST https://cards-against-singulaity.vercel.app/api/agent-play \
+  -H "Content-Type: application/json" \
+  -d '{"action": "moveCard", "cardId": "card-123", "position": {"x": 300, "y": 200, "rotation": 5}}'
+```
+
+### Delete a Card
+
+```bash
+curl -X POST https://cards-against-singulaity.vercel.app/api/agent-play \
+  -H "Content-Type: application/json" \
+  -d '{"action": "deleteCard", "cardId": "card-123"}'
+```
+
+### Clear the Board
+
+```bash
+curl -X POST https://cards-against-singulaity.vercel.app/api/agent-play \
+  -H "Content-Type: application/json" \
+  -d '{"action": "clearCards"}'
+```
+
+## Collaborative Play Flow
+
+1. **Check the board**: `GET /api/agent-play` - see what's already there
+2. **Add your cards**: `POST /api/agent-play` with `addSpecificCard` action
+3. **Arrange if needed**: `POST /api/agent-play` with `moveCard` action
+4. **Mint the result**: `POST /api/agent-mint` (pay 0.01 USDC, get NFT)
+
+Everyone (humans and agents) sees the same board. Your changes appear instantly for all players.
 
 ## Quick Start
 

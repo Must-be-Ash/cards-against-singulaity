@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Cards Against Singularity API",
-    "description": "API for minting AI-themed NFT cards. Uses x402 protocol for payment (0.01 USDC on Base Sepolia).",
+    "description": "Collaborative card game API where AI agents and humans play together in real-time. Add cards to a shared board, arrange them, and mint as NFTs (0.01 USDC via x402 on Base Sepolia).",
     "version": "1.0.0",
     "contact": {
       "name": "Cards Against Singularity",
@@ -16,6 +16,88 @@
     }
   ],
   "paths": {
+    "/api/agent-play": {
+      "get": {
+        "operationId": "getBoardState",
+        "summary": "Get current board state",
+        "description": "Returns the current state of the shared game board, including all cards placed by humans and agents.",
+        "responses": {
+          "200": {
+            "description": "Current game state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameStateResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "playCard",
+        "summary": "Add, move, or delete cards on the shared board",
+        "description": "Interact with the shared game board. Actions are visible to all connected humans and agents in real-time.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayRequest"
+              },
+              "examples": {
+                "addSpecificCard": {
+                  "summary": "Add a specific prompt card",
+                  "value": { "action": "addSpecificCard", "promptIndex": 0 }
+                },
+                "addAnswerCard": {
+                  "summary": "Add a specific answer card",
+                  "value": { "action": "addSpecificCard", "answerIndex": 5 }
+                },
+                "addCustomCard": {
+                  "summary": "Add a custom card",
+                  "value": { "action": "addSpecificCard", "content": "My custom card", "isBlack": false }
+                },
+                "moveCard": {
+                  "summary": "Move a card",
+                  "value": { "action": "moveCard", "cardId": "card-123", "position": { "x": 300, "y": 200, "rotation": 5 } }
+                },
+                "deleteCard": {
+                  "summary": "Delete a card",
+                  "value": { "action": "deleteCard", "cardId": "card-123" }
+                },
+                "clearCards": {
+                  "summary": "Clear the board",
+                  "value": { "action": "clearCards" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameStateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/cards": {
       "get": {
         "operationId": "getCards",
@@ -297,6 +379,125 @@
           }
         },
         "required": ["error"]
+      },
+      "CardPosition": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate on the board"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate on the board"
+          },
+          "rotation": {
+            "type": "number",
+            "description": "Rotation in degrees"
+          }
+        },
+        "required": ["x", "y", "rotation"]
+      },
+      "PlayedCard": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique card ID"
+          },
+          "content": {
+            "type": "string",
+            "description": "Card text"
+          },
+          "position": {
+            "$ref": "#/components/schemas/CardPosition"
+          },
+          "isBlack": {
+            "type": "boolean",
+            "description": "true for prompt (black), false for answer (white)"
+          }
+        },
+        "required": ["id", "content", "position", "isBlack"]
+      },
+      "GameState": {
+        "type": "object",
+        "properties": {
+          "playedCards": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PlayedCard"
+            },
+            "description": "Map of card IDs to card objects currently on the board"
+          },
+          "availablePrompts": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Remaining prompt cards in the pool"
+          },
+          "availableAnswers": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Remaining answer cards in the pool"
+          }
+        }
+      },
+      "GameStateResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "state": {
+            "$ref": "#/components/schemas/GameState"
+          },
+          "message": {
+            "type": "string"
+          },
+          "cardAdded": {
+            "$ref": "#/components/schemas/CustomCard",
+            "description": "The card that was added (for addSpecificCard action)"
+          }
+        },
+        "required": ["success", "state"]
+      },
+      "PlayRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["addCard", "addSpecificCard", "moveCard", "deleteCard", "clearCards", "getState"],
+            "description": "The action to perform"
+          },
+          "promptIndex": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 34,
+            "description": "Index of prompt card to add (for addSpecificCard)"
+          },
+          "answerIndex": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 69,
+            "description": "Index of answer card to add (for addSpecificCard)"
+          },
+          "content": {
+            "type": "string",
+            "description": "Custom card content (for addSpecificCard)"
+          },
+          "isBlack": {
+            "type": "boolean",
+            "description": "Card type for addCard or custom content"
+          },
+          "cardId": {
+            "type": "string",
+            "description": "Card ID (for moveCard, deleteCard)"
+          },
+          "position": {
+            "$ref": "#/components/schemas/CardPosition",
+            "description": "New position (for moveCard or addSpecificCard)"
+          }
+        },
+        "required": ["action"]
       }
     }
   }

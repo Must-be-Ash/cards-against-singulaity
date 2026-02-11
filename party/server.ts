@@ -99,6 +99,38 @@ export default class CardsServer implements Party.Server {
         }
         break
       }
+
+      case "addSpecificCard": {
+        // Allow adding a specific card by content (for AI agents)
+        const { content, isBlack, position } = data
+        if (!content) break
+
+        const cardId = `card-${Date.now()}-${Math.random()}`
+
+        // Use provided position or generate a default one
+        const cardPosition = position || {
+          x: 200 + Math.random() * 300,
+          y: 150 + Math.random() * 200,
+          rotation: (Math.random() - 0.5) * 15
+        }
+
+        this.state.playedCards[cardId] = {
+          id: cardId,
+          content,
+          position: cardPosition,
+          isBlack: isBlack ?? false
+        }
+
+        // Remove from available pool if it exists there
+        if (isBlack) {
+          const idx = this.state.availablePrompts.indexOf(content)
+          if (idx !== -1) this.state.availablePrompts.splice(idx, 1)
+        } else {
+          const idx = this.state.availableAnswers.indexOf(content)
+          if (idx !== -1) this.state.availableAnswers.splice(idx, 1)
+        }
+        break
+      }
     }
 
     this.party.broadcast(JSON.stringify({ type: "gameState", state: this.state }))

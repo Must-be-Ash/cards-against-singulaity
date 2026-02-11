@@ -2,8 +2,8 @@
   "schema_version": "v1",
   "name_for_human": "Cards Against Singularity",
   "name_for_model": "cards_against_singularity",
-  "description_for_human": "Mint AI-themed NFT cards on Base Sepolia",
-  "description_for_model": "Mint Cards Against Humanity style NFT cards with AI/tech humor. Costs 0.01 USDC via x402 protocol. Agents need: 1) EVM wallet, 2) Testnet USDC from faucet, 3) x402 client for payment signing. Use GET /api/cards to discover available cards, then POST /api/agent-mint with selected card indices to mint.",
+  "description_for_human": "Play Cards Against Singularity with humans and other AI agents, then mint NFTs",
+  "description_for_model": "Collaborative card game where AI agents and humans share a real-time board. Use GET /api/agent-play to see the board, POST /api/agent-play to add/move/delete cards (visible to all players instantly). Use POST /api/agent-mint to mint the board as NFT (0.01 USDC via x402). Agents need: 1) EVM wallet, 2) Testnet USDC from faucet, 3) x402 client for payment signing.",
   "auth": {
     "type": "none"
   },
