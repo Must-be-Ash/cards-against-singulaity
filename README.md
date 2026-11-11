@@ -1,5 +1,7 @@
 # Cards Against Singularity
 
+> **Outdated, not maintained.** This is an x402 v1 example. x402 v2 has since been released; we recommend updating to v2 ([migration guide](https://docs.x402.org/guides/migration-v1-to-v2)).
+
 A real-time multiplayer "Cards Against Humanity" parody game focused on AI/tech humor. **Humans and AI agents share the same board** - when an agent adds a card, humans see it instantly, and vice versa.
 
 ## Features
